@@ -342,6 +342,9 @@ Before using In-Memoria tools, you should learn your codebase:
 
 # Option 2: Force learning
 ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": ".", "force": true}'
+
+# Option 3: For large projects (OI OS) - limit files to avoid timeout
+./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": ".", "force": true, "maxFiles": 1000}'
 ```
 
 **Note:** Learning takes 30-60 seconds depending on codebase size. The system will automatically detect if learning is needed when you call other tools.
@@ -349,6 +352,7 @@ Before using In-Memoria tools, you should learn your codebase:
 **⚠️ IMPORTANT: Large Projects (OI OS Project)**
 - **This project only**: The OI OS codebase is very large and learning can take 2-5+ minutes
 - The `brain-trust4 call` command has a 30-second timeout, which will cause learning to fail on large projects
+- **New Feature**: Use `maxFiles` parameter to limit processing (e.g., `{"maxFiles": 1000}`)
 - **Workaround**: Learn smaller directories first, or run learning in background:
 
 ```bash
@@ -463,29 +467,38 @@ cp src/storage/schema.sql dist/storage/schema.sql
 **Root Cause:** The `brain-trust4 call` command has a 30-second timeout. Large codebases (like the OI OS project) can take 2-5+ minutes to learn.
 
 **Solutions:**
-1. **Learn smaller directories first** (recommended for large projects):
+1. **Use maxFiles parameter** (new feature for large projects):
+   ```bash
+   # Limit to first 1000 files to avoid timeout
+   ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "./", "force": true, "maxFiles": 1000}'
+   
+   # Or use excludePatterns to skip large directories
+   ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "./", "force": true, "excludePatterns": ["**/node_modules/**", "**/dist/**", "**/build/**"]}'
+   ```
+
+2. **Learn smaller directories first** (recommended for large projects):
    ```bash
    # Learn specific subdirectories
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "MCP-servers", "force": true}'
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "ID MAPPING", "force": true}'
    ```
 
-2. **Run learning in background** to avoid timeout:
+3. **Run learning in background** to avoid timeout:
    ```bash
    nohup bash -c './brain-trust4 call in-memoria learn_codebase_intelligence '"'"'{"path": "./", "force": true}'"'"' > /tmp/in-memoria-learn.log 2>&1' &
    tail -f /tmp/in-memoria-learn.log
    ```
 
-3. **Check if learning completed**:
+4. **Check if learning completed**:
    ```bash
    ./brain-trust4 call in-memoria get_project_blueprint '{"path": "./"}'
    # Look for: "recommendation": "ready" (learning complete)
    # Or: "recommendation": "learning_recommended" (still needs learning)
    ```
 
-4. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
-5. Check disk space: Learning creates database files
-6. **Note**: This is specific to very large projects like OI OS. Smaller projects typically complete within the 30-second timeout.
+5. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
+6. Check disk space: Learning creates database files
+7. **Note**: This is specific to very large projects like OI OS. Smaller projects typically complete within the 30-second timeout.
 
 ### Rust Build Errors (Optional)
 
