@@ -1,5 +1,7 @@
 # In Memoria
 
+> **📘 For OI OS / Brain Trust 4:** See [OI.md](./OI.md) for complete installation and configuration guide.
+
 [![npm version](https://img.shields.io/npm/v/in-memoria.svg)](https://www.npmjs.com/package/in-memoria)
 [![npm downloads](https://img.shields.io/npm/dm/in-memoria.svg)](https://www.npmjs.com/package/in-memoria)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
