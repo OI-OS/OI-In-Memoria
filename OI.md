@@ -352,8 +352,17 @@ Before using In-Memoria tools, you should learn your codebase:
 **⚠️ IMPORTANT: Large Projects (OI OS Project)**
 - **This project only**: The OI OS codebase is very large and learning can take 2-5+ minutes
 - The `brain-trust4 call` command has a 30-second timeout, which will cause learning to fail on large projects
-- **New Feature**: Use `maxFiles` parameter to limit processing (e.g., `{"maxFiles": 1000}`)
-- **Workaround**: Learn smaller directories first, or run learning in background:
+- **✅ RECOMMENDED: Use CLI directly** (bypasses MCP timeout):
+  ```bash
+  # Run learning directly via CLI (no timeout!)
+  cd MCP-servers/OI-In-Memoria
+  node dist/index.js learn "$(pwd)/../.." --force
+  
+  # Or with absolute path:
+  node dist/index.js learn "/path/to/your/project" --force
+  ```
+- **Alternative**: Use `maxFiles` parameter to limit processing (e.g., `{"maxFiles": 1000}`)
+- **Alternative**: Learn smaller directories first, or run learning in background:
 
 ```bash
 # Learn a specific directory (faster)
@@ -467,7 +476,18 @@ cp src/storage/schema.sql dist/storage/schema.sql
 **Root Cause:** The `brain-trust4 call` command has a 30-second timeout. Large codebases (like the OI OS project) can take 2-5+ minutes to learn.
 
 **Solutions:**
-1. **Use maxFiles parameter** (new feature for large projects):
+1. **Use CLI directly** (RECOMMENDED - bypasses MCP timeout):
+   ```bash
+   # Run learning directly via CLI (no 30-second timeout!)
+   cd MCP-servers/OI-In-Memoria
+   node dist/index.js learn "/path/to/project" --force
+   
+   # Or if installed globally:
+   npx in-memoria learn /path/to/project --force
+   ```
+   This bypasses the MCP connection pool entirely and has no timeout. Perfect for large projects!
+
+2. **Use maxFiles parameter** (if using MCP):
    ```bash
    # Limit to first 1000 files to avoid timeout
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "./", "force": true, "maxFiles": 1000}'
@@ -476,29 +496,29 @@ cp src/storage/schema.sql dist/storage/schema.sql
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "./", "force": true, "excludePatterns": ["**/node_modules/**", "**/dist/**", "**/build/**"]}'
    ```
 
-2. **Learn smaller directories first** (recommended for large projects):
+3. **Learn smaller directories first** (if using MCP):
    ```bash
    # Learn specific subdirectories
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "MCP-servers", "force": true}'
    ./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": "ID MAPPING", "force": true}'
    ```
 
-3. **Run learning in background** to avoid timeout:
+4. **Run learning in background** (if using MCP):
    ```bash
    nohup bash -c './brain-trust4 call in-memoria learn_codebase_intelligence '"'"'{"path": "./", "force": true}'"'"' > /tmp/in-memoria-learn.log 2>&1' &
    tail -f /tmp/in-memoria-learn.log
    ```
 
-4. **Check if learning completed**:
+5. **Check if learning completed**:
    ```bash
    ./brain-trust4 call in-memoria get_project_blueprint '{"path": "./"}'
    # Look for: "recommendation": "ready" (learning complete)
    # Or: "recommendation": "learning_recommended" (still needs learning)
    ```
 
-5. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
-6. Check disk space: Learning creates database files
-7. **Note**: This is specific to very large projects like OI OS. Smaller projects typically complete within the 30-second timeout.
+6. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
+7. Check disk space: Learning creates database files
+8. **Note**: This is specific to very large projects like OI OS. Smaller projects typically complete within the 30-second timeout. **For large projects, always use the CLI directly (solution #1) to avoid timeout issues.**
 
 ### Rust Build Errors (Optional)
 
