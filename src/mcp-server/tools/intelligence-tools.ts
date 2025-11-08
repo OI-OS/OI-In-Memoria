@@ -216,7 +216,7 @@ export class IntelligenceTools {
     ];
   }
 
-  async learnCodebaseIntelligence(args: { path: string; force?: boolean }): Promise<{
+  async learnCodebaseIntelligence(args: { path: string; force?: boolean; maxFiles?: number; excludePatterns?: string[] }): Promise<{
     success: boolean;
     conceptsLearned: number;
     patternsLearned: number;
@@ -232,8 +232,37 @@ export class IntelligenceTools {
   }> {
     // Use shared learning service to ensure consistency between CLI and MCP
     const { LearningService } = await import('../../services/learning-service.js');
+    
+    // For large projects (like OI OS), add common exclude patterns and limit files
+    const excludePatterns = args.excludePatterns || [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.git/**',
+      '**/target/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/coverage/**',
+      '**/.cache/**',
+      '**/tmp/**',
+      '**/temp/**',
+      '**/*.min.js',
+      '**/*.bundle.js',
+      '**/package-lock.json',
+      '**/yarn.lock',
+      '**/pnpm-lock.yaml',
+      '**/rust-core/target/**', // Rust build artifacts
+      '**/npm/**' // Pre-built npm packages
+    ];
+    
     return await LearningService.learnFromCodebase(args.path, {
-      force: args.force
+      force: args.force,
+      maxFiles: args.maxFiles,
+      excludePatterns: excludePatterns,
+      progressCallback: (current: number, total: number, message: string) => {
+        // Send progress to stderr so it's visible but doesn't break JSON output
+        console.error(`Progress: ${current}/${total} - ${message}`);
+      }
     });
   }
 

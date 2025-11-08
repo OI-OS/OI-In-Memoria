@@ -23,6 +23,8 @@ export interface LearningResult {
 export interface LearningOptions {
   force?: boolean;
   progressCallback?: (current: number, total: number, message: string) => void;
+  maxFiles?: number; // Limit number of files to process (for large projects)
+  excludePatterns?: string[]; // Additional ignore patterns
 }
 
 /**
