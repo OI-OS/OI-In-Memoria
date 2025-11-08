@@ -15,7 +15,9 @@ export const SearchCodebaseSchema = z.object({
 
 export const LearnCodebaseIntelligenceSchema = z.object({
   path: z.string().min(1, 'Path is required'),
-  force: z.boolean().optional().default(false)
+  force: z.boolean().optional().default(false),
+  maxFiles: z.number().optional().describe('Maximum number of files to process (useful for very large projects like OI OS to avoid timeout)'),
+  excludePatterns: z.array(z.string()).optional().describe('Additional glob patterns to exclude from learning (e.g., ["**/large-dir/**"])')
 });
 
 export const GetSemanticInsightsSchema = z.object({
