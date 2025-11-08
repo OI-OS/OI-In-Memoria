@@ -235,6 +235,101 @@ See the [AI Agent Quick Installation](#ai-agent-quick-installation) section for 
 
 ---
 
+## Configuring Parameter Extractors
+
+Parameter extractors allow OI OS to automatically extract tool parameters from natural language queries.
+
+**⚠️ CRITICAL: File Loading Priority**
+
+OI OS loads parameter extractors from `parameter_extractors.toml.default` in the project root, **not** from `parameter_extractors.toml`. The system prioritizes the `.default` file, so patterns must be added there for them to be loaded.
+
+### Location
+
+Add to: `parameter_extractors.toml.default` in your OI OS project root.
+
+### In-Memoria Parameter Extractors
+
+Append the following patterns to `parameter_extractors.toml.default`:
+
+```toml
+# ============================================================================
+# IN-MEMORIA MCP SERVER EXTRACTION PATTERNS
+# ============================================================================
+
+# Path - Extract file or directory path
+"path" = "regex:(?:path|file|directory|dir)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+"in-memoria::get_project_blueprint.path" = "regex:(?:path|in|for|from)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+"in-memoria::analyze_codebase.path" = "regex:(?:analyze|check|examine|look at|path|file|directory)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+"in-memoria::learn_codebase_intelligence.path" = "regex:(?:learn|analyze|path|from|in)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+"in-memoria::auto_learn_if_needed.path" = "regex:(?:path|in|for|from)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+
+# Query - Extract search query
+"query" = "keyword:after_query"
+"in-memoria::search_codebase.query" = "transform:regex:(?:search|find|look for|query)\\s+(?:for|is|:|=)?\\s*(.+?)(?:\\s+type|\\s+limit|$)|trim"
+"in-memoria::get_semantic_insights.query" = "transform:regex:(?:query|search|find|insights?)\\s+(?:for|is|:|=)?\\s*(.+?)(?:\\s+type|\\s+limit|$)|trim"
+
+# Problem Description - Extract problem/feature description
+"problemDescription" = "keyword:after_description"
+"in-memoria::predict_coding_approach.problemDescription" = "transform:regex:(?:predict|approach|how|implement|add|create|build)\\s+(.+?)(?:\\s+with|\\s+context|\\s+include|$)|trim"
+"in-memoria::get_pattern_recommendations.problemDescription" = "transform:regex:(?:pattern|recommend|suggest|need|want|implement|add|create)\\s+(.+?)(?:\\s+current|\\s+include|$)|trim"
+
+# Type - Extract search type (semantic/text/pattern)
+"type" = "regex:(semantic|text|pattern)"
+"in-memoria::search_codebase.type" = "regex:(?:type|search type|using)\\s+(semantic|text|pattern)"
+
+# Limit - Extract numeric limit
+"limit" = "regex:\\b(\\d+)\\b"
+"in-memoria::search_codebase.limit" = "regex:(?:limit|max|top)\\s+(\\d+)"
+"in-memoria::get_semantic_insights.limit" = "regex:(?:limit|max|top)\\s+(\\d+)"
+
+# Include flags - Extract boolean flags
+"includeFeatureMap" = "regex:(?:include|with)\\s+feature\\s+map"
+"in-memoria::get_project_blueprint.includeFeatureMap" = "regex:(?:include|with)\\s+feature\\s+map"
+
+"includeFileContent" = "regex:(?:include|with)\\s+file\\s+content"
+"in-memoria::analyze_codebase.includeFileContent" = "regex:(?:include|with)\\s+file\\s+content"
+
+"includeFileRouting" = "regex:(?:include|with)\\s+file\\s+routing"
+"in-memoria::predict_coding_approach.includeFileRouting" = "regex:(?:include|with)\\s+file\\s+routing"
+
+"includeRelatedFiles" = "regex:(?:include|with)\\s+related\\s+files"
+"in-memoria::get_pattern_recommendations.includeRelatedFiles" = "regex:(?:include|with)\\s+related\\s+files"
+
+"includeRecentActivity" = "regex:(?:include|with)\\s+recent\\s+activity"
+"in-memoria::get_developer_profile.includeRecentActivity" = "regex:(?:include|with)\\s+recent\\s+activity"
+
+"includeWorkContext" = "regex:(?:include|with)\\s+work\\s+context"
+"in-memoria::get_developer_profile.includeWorkContext" = "regex:(?:include|with)\\s+work\\s+context"
+
+"includeSetupSteps" = "regex:(?:include|with)\\s+setup\\s+steps"
+"in-memoria::auto_learn_if_needed.includeSetupSteps" = "regex:(?:include|with)\\s+setup\\s+steps"
+
+# Force flag
+"force" = "regex:(?:force|forced|yes|true)"
+"in-memoria::learn_codebase_intelligence.force" = "regex:(?:force|forced|yes|true)"
+"in-memoria::auto_learn_if_needed.force" = "regex:(?:force|forced|yes|true)"
+
+# Skip learning flag
+"skipLearning" = "regex:(?:skip|without)\\s+learning"
+"in-memoria::auto_learn_if_needed.skipLearning" = "regex:(?:skip|without)\\s+learning"
+
+# Current file
+"currentFile" = "regex:(?:current|in|file)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+"in-memoria::get_pattern_recommendations.currentFile" = "regex:(?:current|in|file)\\s+(?:is|:|=)?\\s*([\\w./-]+|[\"'][\\w./-]+[\"'])"
+
+# Concept type
+"conceptType" = "regex:(?:concept|type)\\s+(?:is|:|=)?\\s*(\\w+)"
+"in-memoria::get_semantic_insights.conceptType" = "regex:(?:concept|type)\\s+(?:is|:|=)?\\s*(\\w+)"
+
+# Context (JSON object - complex, may need manual handling)
+"context" = "keyword:after_context"
+"in-memoria::predict_coding_approach.context" = "transform:regex:(?:context|with|using)\\s+(.+?)(?:\\s+include|$)|trim"
+```
+
+**Note:** These patterns have already been added to your `parameter_extractors.toml.default` file during installation. If you need to add them manually, append the above content to the file.
+
+---
+
 ## End User Setup
 
 ### First-Time Learning
