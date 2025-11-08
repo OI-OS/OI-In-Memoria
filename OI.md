@@ -1,495 +1,455 @@
-# AI Agent Instructions for In Memoria MCP
+# In-Memoria MCP Server - OI OS Installation Guide
 
-This file provides instructions for AI agents (Claude Code, GitHub Copilot, Cursor, etc.) on how to effectively use the In Memoria MCP server for intelligent codebase navigation and analysis.
+This guide provides comprehensive installation instructions for AI agents installing the In-Memoria MCP server in OI OS (Brain Trust 4) environments, as well as end-user setup instructions.
 
-## Quick Start Checklist
+## Table of Contents
 
-Every new session, follow this pattern:
+1. [AI Agent Quick Installation](#ai-agent-quick-installation)
+2. [Prerequisites](#prerequisites)
+3. [Full Installation Steps](#full-installation-steps)
+4. [Connecting to OI OS](#connecting-to-oi-os)
+5. [Creating Intent Mappings](#creating-intent-mappings)
+6. [Creating Parameter Rules](#creating-parameter-rules)
+7. [End User Setup](#end-user-setup)
+8. [Verification & Testing](#verification--testing)
+9. [Troubleshooting](#troubleshooting)
+10. [Available Tools Reference](#available-tools-reference)
 
-- [ ] 1. Call `get_project_blueprint()` to get instant context
-- [ ] 2. Check `learningStatus` in the blueprint response
-- [ ] 3. If `recommendation === 'learning_recommended'`, call `auto_learn_if_needed()`
-- [ ] 4. Use the blueprint to understand tech stack, entry points, and key directories
-- [ ] 5. Leverage feature maps and semantic search for navigation
+---
 
-## Tool Reference Card
+## AI Agent Quick Installation
 
-### 🎯 Most Important Tools (Use These First)
+**⚠️ For AI Agents: Use Direct Calls for Reliability**
 
-| Tool | When to Use | Key Feature |
-|------|-------------|-------------|
-| `get_project_blueprint` | **Every session start** | Instant context: tech stack, entry points, architecture, learning status |
-| `auto_learn_if_needed` | When learning recommended | Smart learning with automatic staleness detection |
-| `predict_coding_approach` | Before implementing | Get approach + file routing + patterns in one call |
-| `search_codebase` | Finding code | Semantic (meaning), text (keywords), or pattern search |
-| `analyze_codebase` | Understanding files/dirs | Token-efficient analysis with top concepts/patterns |
+AI agents should prefer **direct `brain-trust4 call` commands** over natural language queries for maximum reliability. Natural language commands can timeout or have parameter extraction issues. Direct calls bypass intent mapping and parameter extraction, providing consistent results.
 
-### 📊 Complete Tool List (10 Core + 3 Monitoring)
+**Example:**
+```bash
+# ✅ RECOMMENDED for AI agents: Direct call
+./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
 
-#### Core Intelligence Tools (10)
+# ⚠️ FALLBACK: Natural language (may timeout or fail parameter extraction)
+./oi "in-memoria get project blueprint"
+```
 
-1. **`analyze_codebase`** - Analyze files or directories
-   ```typescript
-   { path: string, includeFileContent?: boolean }
-   ```
-   Returns: Language, concepts (top 10), patterns (top 5), complexity
+For AI agents using OI OS, execute the following commands:
 
-2. **`search_codebase`** - Smart search (semantic/text/pattern)
-   ```typescript
-   { query: string, type?: 'semantic'|'text'|'pattern', limit?: number }
-   ```
-   Returns: Scored results with context
+```bash
+# 1. Install the server
+./oi install https://github.com/pi22by7/In-Memoria.git
 
-3. **`learn_codebase_intelligence`** - Deep learning
-   ```typescript
-   { path: string, force?: boolean }
-   ```
-   Returns: Blueprint, concepts learned, patterns discovered
+# 2. Fix missing schema file (if build failed)
+cd MCP-servers/In-Memoria
+mkdir -p dist/storage
+cp src/storage/schema.sql dist/storage/schema.sql
 
-4. **`get_project_blueprint`** - Instant project context ⭐
-   ```typescript
-   { path?: string, includeFeatureMap?: boolean }
-   ```
-   Returns: Tech stack, entry points, key dirs, feature map, **learning status**
+# 3. Connect the server to OI OS
+cd ../../
+./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server
 
-5. **`get_semantic_insights`** - Query learned concepts
-   ```typescript
-   { query?: string, conceptType?: string, limit?: number }
-   ```
-   Returns: Concepts, relationships, usage contexts
+# 4. Create intent mappings and parameter rules (single optimized transaction)
+sqlite3 brain-trust4.db << 'SQL'
+BEGIN TRANSACTION;
 
-6. **`get_pattern_recommendations`** - Pattern suggestions
-   ```typescript
-   { problemDescription: string, currentFile?: string, includeRelatedFiles?: boolean }
-   ```
-   Returns: Patterns, examples, confidence, related files
+-- Intent mappings for In-Memoria MCP server (most common operations)
+INSERT OR REPLACE INTO intent_mappings (keyword, server_name, tool_name, priority) VALUES 
+('in-memoria get blueprint', 'in-memoria', 'get_project_blueprint', 10),
+('in-memoria blueprint', 'in-memoria', 'get_project_blueprint', 10),
+('in-memoria project blueprint', 'in-memoria', 'get_project_blueprint', 10),
+('in-memoria analyze codebase', 'in-memoria', 'analyze_codebase', 10),
+('in-memoria analyze', 'in-memoria', 'analyze_codebase', 10),
+('in-memoria search codebase', 'in-memoria', 'search_codebase', 10),
+('in-memoria search', 'in-memoria', 'search_codebase', 10),
+('in-memoria learn', 'in-memoria', 'learn_codebase_intelligence', 10),
+('in-memoria learn codebase', 'in-memoria', 'learn_codebase_intelligence', 10),
+('in-memoria auto learn', 'in-memoria', 'auto_learn_if_needed', 10),
+('in-memoria predict approach', 'in-memoria', 'predict_coding_approach', 10),
+('in-memoria predict', 'in-memoria', 'predict_coding_approach', 10),
+('in-memoria get patterns', 'in-memoria', 'get_pattern_recommendations', 10),
+('in-memoria patterns', 'in-memoria', 'get_pattern_recommendations', 10),
+('in-memoria semantic insights', 'in-memoria', 'get_semantic_insights', 10),
+('in-memoria insights', 'in-memoria', 'get_semantic_insights', 10),
+('in-memoria developer profile', 'in-memoria', 'get_developer_profile', 10),
+('in-memoria profile', 'in-memoria', 'get_developer_profile', 10),
+('in-memoria system status', 'in-memoria', 'get_system_status', 10),
+('in-memoria status', 'in-memoria', 'get_system_status', 10),
+('in-memoria health', 'in-memoria', 'health_check', 10),
+('in-memoria health check', 'in-memoria', 'health_check', 10);
 
-7. **`predict_coding_approach`** - Implementation guidance
-   ```typescript
-   { problemDescription: string, context?: object, includeFileRouting?: boolean }
-   ```
-   Returns: Approach, patterns, complexity, target files
+-- Parameter rules for In-Memoria MCP server
+-- get_project_blueprint: no required fields (path is optional)
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'get_project_blueprint', 'in-memoria::get_project_blueprint', '[]',
+'{"path": {"FromQuery": "in-memoria::get_project_blueprint.path"}, "includeFeatureMap": {"FromQuery": "in-memoria::get_project_blueprint.includeFeatureMap"}}', '[]');
 
-8. **`get_developer_profile`** - Coding style and conventions
-   ```typescript
-   { includeRecentActivity?: boolean, includeWorkContext?: boolean }
-   ```
-   Returns: Naming conventions, structural patterns, expertise
+-- analyze_codebase: path is REQUIRED
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'analyze_codebase', 'in-memoria::analyze_codebase', '["path"]',
+'{"path": {"FromQuery": "in-memoria::analyze_codebase.path"}, "includeFileContent": {"FromQuery": "in-memoria::analyze_codebase.includeFileContent"}}', '[]');
 
-9. **`contribute_insights`** - Record architectural decisions
-   ```typescript
-   { type: string, content: object, confidence: number, sourceAgent: string }
-   ```
-   Returns: Success, insight ID
+-- search_codebase: query is REQUIRED
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'search_codebase', 'in-memoria::search_codebase', '["query"]',
+'{"query": {"FromQuery": "in-memoria::search_codebase.query"}, "type": {"FromQuery": "in-memoria::search_codebase.type"}, "limit": {"FromQuery": "in-memoria::search_codebase.limit"}}', '[]');
 
-10. **`auto_learn_if_needed`** - Smart auto-learning ⭐
-    ```typescript
-    { path?: string, force?: boolean, skipLearning?: boolean, includeSetupSteps?: boolean }
-    ```
-    Returns: Action taken, intelligence status, setup steps
+-- learn_codebase_intelligence: path is REQUIRED
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'learn_codebase_intelligence', 'in-memoria::learn_codebase_intelligence', '["path"]',
+'{"path": {"FromQuery": "in-memoria::learn_codebase_intelligence.path"}, "force": {"FromQuery": "in-memoria::learn_codebase_intelligence.force"}}', '[]');
 
-#### Monitoring Tools (3 - for debugging)
+-- auto_learn_if_needed: no required fields
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'auto_learn_if_needed', 'in-memoria::auto_learn_if_needed', '[]',
+'{"path": {"FromQuery": "in-memoria::auto_learn_if_needed.path"}, "force": {"FromQuery": "in-memoria::auto_learn_if_needed.force"}, "skipLearning": {"FromQuery": "in-memoria::auto_learn_if_needed.skipLearning"}, "includeSetupSteps": {"FromQuery": "in-memoria::auto_learn_if_needed.includeSetupSteps"}}', '[]');
+
+-- predict_coding_approach: problemDescription is REQUIRED
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'predict_coding_approach', 'in-memoria::predict_coding_approach', '["problemDescription"]',
+'{"problemDescription": {"FromQuery": "in-memoria::predict_coding_approach.problemDescription"}, "context": {"FromQuery": "in-memoria::predict_coding_approach.context"}, "includeFileRouting": {"FromQuery": "in-memoria::predict_coding_approach.includeFileRouting"}}', '[]');
+
+-- get_pattern_recommendations: problemDescription is REQUIRED
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'get_pattern_recommendations', 'in-memoria::get_pattern_recommendations', '["problemDescription"]',
+'{"problemDescription": {"FromQuery": "in-memoria::get_pattern_recommendations.problemDescription"}, "currentFile": {"FromQuery": "in-memoria::get_pattern_recommendations.currentFile"}, "includeRelatedFiles": {"FromQuery": "in-memoria::get_pattern_recommendations.includeRelatedFiles"}}', '[]');
+
+-- get_semantic_insights: no required fields
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'get_semantic_insights', 'in-memoria::get_semantic_insights', '[]',
+'{"query": {"FromQuery": "in-memoria::get_semantic_insights.query"}, "conceptType": {"FromQuery": "in-memoria::get_semantic_insights.conceptType"}, "limit": {"FromQuery": "in-memoria::get_semantic_insights.limit"}}', '[]');
+
+-- get_developer_profile: no required fields
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'get_developer_profile', 'in-memoria::get_developer_profile', '[]',
+'{"includeRecentActivity": {"FromQuery": "in-memoria::get_developer_profile.includeRecentActivity"}, "includeWorkContext": {"FromQuery": "in-memoria::get_developer_profile.includeWorkContext"}}', '[]');
+
+-- get_system_status: no required fields
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'get_system_status', 'in-memoria::get_system_status', '[]', '{}', '[]');
+
+-- health_check: no required fields
+INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, required_fields, field_generators, patterns) VALUES
+('in-memoria', 'health_check', 'in-memoria::health_check', '[]', '{}', '[]');
+
+COMMIT;
+SQL
+```
+
+---
+
+## Prerequisites
+
+- **Node.js 18+** - Required for running the MCP server
+- **OI OS / Brain Trust 4** - The OI OS platform
+- **SQLite3** - For database operations (usually pre-installed)
+- **Optional: Rust 1.70+** - For building from source (not required for basic functionality)
+
+---
+
+## Full Installation Steps
+
+### Step 1: Install the Server
+
+```bash
+# From your OI OS project root
+./oi install https://github.com/pi22by7/In-Memoria.git
+```
+
+**Note:** The `oi install` command will clone the repository and install npm dependencies, but may fail at the connection step. This is normal - proceed with manual connection.
+
+### Step 2: Fix Missing Files (if build failed)
+
+If the build failed (e.g., Rust/Cargo not installed), you may need to manually copy the schema file:
+
+```bash
+cd MCP-servers/In-Memoria
+mkdir -p dist/storage
+cp src/storage/schema.sql dist/storage/schema.sql
+```
+
+### Step 3: Verify Installation
+
+```bash
+cd MCP-servers/In-Memoria
+ls -la dist/index.js
+# Ensure the built file exists
+```
+
+---
+
+## Connecting to OI OS
+
+### Step 1: Connect the Server
+
+From your OI OS project root:
+
+```bash
+./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server
+```
+
+**Note:** The server will automatically initialize its database on first run. The database file (`in-memoria.db`) will be created in the `MCP-servers/In-Memoria/` directory.
+
+### Step 2: Verify Connection
+
+```bash
+./oi list
+# Should show "in-memoria" in the server list
+
+./oi status in-memoria
+# Should show server status and capabilities
+
+# Test with direct call (most reliable method)
+./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+```
+
+---
+
+## Creating Intent Mappings
+
+Intent mappings allow OI OS to route natural language queries to In-Memoria tools. The mappings are created in the `brain-trust4.db` database.
+
+See the [AI Agent Quick Installation](#ai-agent-quick-installation) section for the complete SQL script to create all intent mappings.
+
+**Key Intent Mappings:**
+- `in-memoria get blueprint` → `get_project_blueprint`
+- `in-memoria analyze codebase` → `analyze_codebase`
+- `in-memoria search` → `search_codebase`
+- `in-memoria learn` → `learn_codebase_intelligence`
+- `in-memoria predict` → `predict_coding_approach`
+- `in-memoria patterns` → `get_pattern_recommendations`
+
+---
+
+## Creating Parameter Rules
+
+Parameter rules define required fields and extraction patterns for each tool. These are created in the `brain-trust4.db` database.
+
+See the [AI Agent Quick Installation](#ai-agent-quick-installation) section for the complete SQL script to create all parameter rules.
+
+**Key Parameter Rules:**
+- `get_project_blueprint`: No required fields (path is optional)
+- `analyze_codebase`: `path` is required
+- `search_codebase`: `query` is required
+- `learn_codebase_intelligence`: `path` is required
+- `predict_coding_approach`: `problemDescription` is required
+- `get_pattern_recommendations`: `problemDescription` is required
+
+---
+
+## End User Setup
+
+### First-Time Learning
+
+Before using In-Memoria tools, you should learn your codebase:
+
+```bash
+# Option 1: Auto-learn (recommended - smart detection)
+./brain-trust4 call in-memoria auto_learn_if_needed '{"path": "."}'
+
+# Option 2: Force learning
+./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": ".", "force": true}'
+```
+
+**Note:** Learning takes 30-60 seconds depending on codebase size. The system will automatically detect if learning is needed when you call other tools.
+
+### Using Natural Language Queries
+
+After setup, you can use natural language queries:
+
+```bash
+# Get project blueprint
+./oi "in-memoria get blueprint"
+
+# Analyze a specific file
+./oi "in-memoria analyze src/index.ts"
+
+# Search codebase
+./oi "in-memoria search authentication"
+
+# Predict coding approach
+./oi "in-memoria predict add password reset functionality"
+```
+
+---
+
+## Verification & Testing
+
+### Test 1: Check Server Connection
+
+```bash
+./oi status in-memoria
+```
+
+Should show:
+- Server status: Connected
+- Tools: 14
+- Resources: 0
+- Prompts: 0
+
+### Test 2: Get Project Blueprint
+
+```bash
+./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+```
+
+Should return project blueprint with tech stack, entry points, and learning status.
+
+### Test 3: System Status
+
+```bash
+./brain-trust4 call in-memoria get_system_status '{}'
+```
+
+Should return system health information.
+
+### Test 4: Health Check
+
+```bash
+./brain-trust4 call in-memoria health_check '{}'
+```
+
+Should verify setup and configuration.
+
+---
+
+## Troubleshooting
+
+### Server Won't Connect
+
+**Error:** "Server closed connection" or "Initialization failed"
+
+**Solutions:**
+1. Verify `dist/index.js` exists: `ls -la MCP-servers/In-Memoria/dist/index.js`
+2. Check `dist/storage/schema.sql` exists: `ls -la MCP-servers/In-Memoria/dist/storage/schema.sql`
+3. If schema.sql is missing, copy it: `cp src/storage/schema.sql dist/storage/schema.sql`
+4. Check Node.js is installed: `node --version` (should be 18+)
+5. Check database initialization: Look for `in-memoria.db` in `MCP-servers/In-Memoria/`
+
+### Database Initialization Fails
+
+**Error:** "Failed to initialize SQLite database" or "ENOENT: no such file or directory, open '.../schema.sql'"
+
+**Solution:**
+```bash
+cd MCP-servers/In-Memoria
+mkdir -p dist/storage
+cp src/storage/schema.sql dist/storage/schema.sql
+```
+
+### Tools Not Available
+
+**Error:** "Tool not found" or tools list is empty
+
+**Solutions:**
+1. Verify server connection: `./oi status in-memoria`
+2. Restart server connection: `./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server`
+3. Check server logs for errors
+
+### Learning Fails or Takes Too Long
+
+**Error:** Learning times out or fails
+
+**Solutions:**
+1. Check codebase size - very large codebases may take longer
+2. Try with `force: false` first: `auto_learn_if_needed`
+3. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
+4. Check disk space: Learning creates database files
+
+### Rust Build Errors (Optional)
+
+**Error:** "spawn cargo" or "ENOENT: cargo"
+
+**Note:** Rust/Cargo is **optional** for basic functionality. The server works with pre-compiled TypeScript. If you want full performance:
+
+1. Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+2. Rebuild: `cd MCP-servers/In-Memoria && npm run build`
+
+---
+
+## Available Tools Reference
+
+In-Memoria provides 14 tools organized into categories:
+
+### Core Intelligence Tools (10)
+
+1. **`get_project_blueprint`** - Get instant project context
+   - **Required:** None
+   - **Optional:** `path`, `includeFeatureMap`
+   - **Returns:** Tech stack, entry points, architecture, learning status
+
+2. **`analyze_codebase`** - Analyze files or directories
+   - **Required:** `path`
+   - **Optional:** `includeFileContent`
+   - **Returns:** Language, concepts, patterns, complexity
+
+3. **`search_codebase`** - Search code (semantic/text/pattern)
+   - **Required:** `query`
+   - **Optional:** `type` (semantic/text/pattern), `limit`
+   - **Returns:** Scored results with context
+
+4. **`learn_codebase_intelligence`** - Deep learning from codebase
+   - **Required:** `path`
+   - **Optional:** `force`
+   - **Returns:** Blueprint, concepts learned, patterns discovered
+
+5. **`auto_learn_if_needed`** - Smart auto-learning
+   - **Required:** None
+   - **Optional:** `path`, `force`, `skipLearning`, `includeSetupSteps`
+   - **Returns:** Action taken, intelligence status, setup steps
+
+6. **`predict_coding_approach`** - Implementation guidance
+   - **Required:** `problemDescription`
+   - **Optional:** `context`, `includeFileRouting`
+   - **Returns:** Approach, patterns, complexity, target files
+
+7. **`get_pattern_recommendations`** - Pattern suggestions
+   - **Required:** `problemDescription`
+   - **Optional:** `currentFile`, `includeRelatedFiles`
+   - **Returns:** Patterns, examples, confidence, related files
+
+8. **`get_semantic_insights`** - Query learned concepts
+   - **Required:** None
+   - **Optional:** `query`, `conceptType`, `limit`
+   - **Returns:** Concepts, relationships, usage contexts
+
+9. **`get_developer_profile`** - Coding style and conventions
+   - **Required:** None
+   - **Optional:** `includeRecentActivity`, `includeWorkContext`
+   - **Returns:** Naming conventions, structural patterns, expertise
+
+10. **`contribute_insights`** - Record architectural decisions
+    - **Required:** `type`, `content`, `confidence`, `sourceAgent`
+    - **Returns:** Success, insight ID
+
+### Monitoring Tools (4)
 
 11. **`get_system_status`** - System health check
 12. **`get_intelligence_metrics`** - Concept/pattern metrics
 13. **`get_performance_status`** - Performance diagnostics
+14. **`health_check`** - Setup verification
 
-## Common Use Cases
-
-### Use Case 1: Starting Fresh in a New Codebase
-
-```typescript
-// Step 1: Get the lay of the land
-const blueprint = await mcp.get_project_blueprint({
-  path: '.',
-  includeFeatureMap: true
-});
-
-console.log('Tech Stack:', blueprint.techStack);
-console.log('Entry Points:', blueprint.entryPoints);
-console.log('Key Directories:', blueprint.keyDirectories);
-
-// Step 2: Learn if needed
-if (blueprint.learningStatus.recommendation !== 'ready') {
-  await mcp.auto_learn_if_needed({
-    path: '.',
-    includeProgress: true
-  });
-}
-
-// Step 3: You now have full context and intelligence!
-```
-
-### Use Case 2: Implementing a New Feature
-
-```typescript
-// Step 1: Get implementation approach with file routing
-const approach = await mcp.predict_coding_approach({
-  problemDescription: 'Add user password reset functionality',
-  context: {
-    feature: 'authentication',
-    relatedFiles: ['src/auth/login.ts']
-  },
-  includeFileRouting: true
-});
-
-// Step 2: Get pattern recommendations for consistency
-const patterns = await mcp.get_pattern_recommendations({
-  problemDescription: 'Password reset with email validation',
-  currentFile: approach.fileRouting.suggestedStartPoint,
-  includeRelatedFiles: true
-});
-
-// Step 3: Search for similar implementations
-const examples = await mcp.search_codebase({
-  query: 'email validation auth',
-  type: 'semantic',
-  limit: 5
-});
-
-// Now you have: approach + target files + patterns + examples
-```
-
-### Use Case 3: Understanding Existing Code
-
-```typescript
-// Step 1: Analyze the mysterious directory
-const analysis = await mcp.analyze_codebase({
-  path: './src/services/payment'
-});
-
-// Step 2: Get semantic insights about key concepts
-const insights = await mcp.get_semantic_insights({
-  query: 'payment processing',
-  limit: 10
-});
-
-// Step 3: Find all related code
-const related = await mcp.search_codebase({
-  query: 'stripe payment integration',
-  type: 'semantic'
-});
-
-// Now you understand: structure + concepts + usage
-```
-
-### Use Case 4: Code Review / Refactoring
-
-```typescript
-// Step 1: Understand the coding conventions
-const profile = await mcp.get_developer_profile({
-  includeRecentActivity: true
-});
-
-// Step 2: Check if code follows project patterns
-const patterns = await mcp.get_pattern_recommendations({
-  problemDescription: 'Review API error handling consistency',
-  currentFile: 'src/api/routes/users.ts',
-  includeRelatedFiles: true
-});
-
-// Step 3: Find similar implementations for comparison
-const similar = await mcp.search_codebase({
-  query: 'try catch error middleware',
-  type: 'pattern'
-});
-
-// Now you can: validate consistency + suggest improvements
-```
-
-## 🎯 Decision Tree: Which Tool to Use?
-
-```
-Need instant project context?
-  → get_project_blueprint()
-
-Need to learn/update intelligence?
-  → auto_learn_if_needed() (smart) OR learn_codebase_intelligence() (force)
-
-Need implementation guidance?
-  → predict_coding_approach() with includeFileRouting=true
-
-Need to find code?
-  ├─ By meaning/concept? → search_codebase(type='semantic')
-  ├─ By keyword? → search_codebase(type='text')
-  └─ By pattern? → search_codebase(type='pattern')
-
-Need to understand a file?
-  → analyze_codebase(path='./specific/file.ts')
-
-Need coding patterns?
-  → get_pattern_recommendations() with includeRelatedFiles=true
-
-Need to understand what codebase knows?
-  → get_semantic_insights()
-
-Need coding style/conventions?
-  → get_developer_profile()
-
-Made an architectural decision?
-  → contribute_insights()
-
-Debugging In Memoria?
-  → get_system_status() / get_intelligence_metrics() / get_performance_status()
-```
-
-## 💡 Pro Tips for AI Agents
-
-### 1. Always Check Learning Status First
-```typescript
-const blueprint = await mcp.get_project_blueprint({ path: '.' });
-if (blueprint.learningStatus.recommendation !== 'ready') {
-  // Learning needed - call auto_learn_if_needed()
-}
-```
-
-### 2. Use Feature Maps for Instant Navigation
-```typescript
-const blueprint = await mcp.get_project_blueprint({
-  path: '.',
-  includeFeatureMap: true  // ← Get feature-to-file mapping
-});
-
-// Now you know which files handle which features:
-// blueprint.featureMap['authentication'] = ['src/auth/login.ts', ...]
-```
-
-### 3. Combine Tools for Maximum Context
-```typescript
-// Get everything in 3 calls:
-const [blueprint, approach, patterns] = await Promise.all([
-  mcp.get_project_blueprint({ path: '.', includeFeatureMap: true }),
-  mcp.predict_coding_approach({ problemDescription: '...', includeFileRouting: true }),
-  mcp.get_pattern_recommendations({ problemDescription: '...', includeRelatedFiles: true })
-]);
-
-// You now have: architecture + approach + files + patterns
-```
-
-### 4. Leverage Token-Efficient Responses
-In Memoria automatically limits responses to avoid overwhelming the LLM:
-- File analysis: Top 10 concepts, top 5 patterns
-- Directory analysis: Top 15 concepts, top 10 patterns
-- Use `get_semantic_insights` if you need more concepts
-
-### 5. Trust the Semantic Search
-```typescript
-// ✅ GOOD: Semantic search understands meaning
-await mcp.search_codebase({
-  query: 'user authentication flow',
-  type: 'semantic'
-});
-
-// ❌ BAD: Text search only matches keywords
-await mcp.search_codebase({
-  query: 'user authentication flow',
-  type: 'text'  // Won't find conceptually related code
-});
-```
-
-### 6. Record Insights for Future Sessions
-```typescript
-// When you discover something important:
-await mcp.contribute_insights({
-  type: 'architectural_decision',
-  content: {
-    decision: 'All database queries use Prisma ORM',
-    reasoning: 'Type safety and migration management',
-    affectedFiles: ['src/db/', 'prisma/']
-  },
-  confidence: 0.95,
-  sourceAgent: 'github-copilot'  // or 'claude-code', 'cursor', etc.
-});
-```
-
-## 🚫 Common Mistakes to Avoid
-
-### ❌ DON'T: Skip the learning check
-```typescript
-// Bad - might work with stale/missing data
-const results = await mcp.search_codebase({ query: '...' });
-```
-
-### ✅ DO: Always check and learn if needed
-```typescript
-// Good - ensure intelligence is fresh
-const blueprint = await mcp.get_project_blueprint({ path: '.' });
-if (blueprint.learningStatus.recommendation !== 'ready') {
-  await mcp.auto_learn_if_needed({ path: '.' });
-}
-const results = await mcp.search_codebase({ query: '...' });
-```
-
-### ❌ DON'T: Use text search for concepts
-```typescript
-// Bad - won't find semantically related code
-await mcp.search_codebase({ query: 'payment processing', type: 'text' });
-```
-
-### ✅ DO: Use semantic search for concepts
-```typescript
-// Good - finds conceptually related code
-await mcp.search_codebase({ query: 'payment processing', type: 'semantic' });
-```
-
-### ❌ DON'T: Ignore pattern recommendations
-```typescript
-// Bad - implementing without checking patterns
-// Just start coding...
-```
-
-### ✅ DO: Follow project patterns
-```typescript
-// Good - check patterns first
-const patterns = await mcp.get_pattern_recommendations({
-  problemDescription: 'Create new API endpoint',
-  includeRelatedFiles: true
-});
-// Now implement following the discovered patterns
-```
-
-### ❌ DON'T: Force re-learning unnecessarily
-```typescript
-// Bad - wastes time re-learning when data is fresh
-await mcp.auto_learn_if_needed({ path: '.', force: true });
-```
-
-### ✅ DO: Trust the staleness detection
-```typescript
-// Good - only learns if needed
-await mcp.auto_learn_if_needed({ path: '.', force: false });
-```
-
-## 🔄 Recommended Session Flow
-
-```typescript
-// === SESSION START ===
-
-// 1. Get instant context + learning status
-const blueprint = await mcp.get_project_blueprint({
-  path: '.',
-  includeFeatureMap: true
-});
-
-// 2. Learn if needed (automatic staleness check)
-if (blueprint.learningStatus.recommendation !== 'ready') {
-  await mcp.auto_learn_if_needed({
-    path: '.',
-    includeProgress: false  // Set true if you want progress updates
-  });
-}
-
-// 3. Understand coding style (once per session)
-const profile = await mcp.get_developer_profile({
-  includeRecentActivity: false,
-  includeWorkContext: false
-});
-
-// === DURING WORK ===
-
-// 4. For each task, get approach + routing
-const approach = await mcp.predict_coding_approach({
-  problemDescription: userRequest,
-  includeFileRouting: true
-});
-
-// 5. Get patterns for consistency
-const patterns = await mcp.get_pattern_recommendations({
-  problemDescription: userRequest,
-  currentFile: approach.fileRouting?.suggestedStartPoint,
-  includeRelatedFiles: true
-});
-
-// 6. Search for relevant code as needed
-const examples = await mcp.search_codebase({
-  query: relevantConcept,
-  type: 'semantic',
-  limit: 5
-});
-
-// 7. Analyze specific files as needed
-const fileAnalysis = await mcp.analyze_codebase({
-  path: targetFile
-});
-
-// === SESSION END (Optional) ===
-
-// 8. Record any insights discovered
-await mcp.contribute_insights({
-  type: 'architectural_decision',
-  content: { /* ... */ },
-  confidence: 0.9,
-  sourceAgent: 'your-agent-name'
-});
-```
-
-## 📊 Response Format Examples
-
-### get_project_blueprint Response
-```json
-{
-  "techStack": ["TypeScript", "React", "Node.js", "Express"],
-  "entryPoints": {
-    "web": "src/index.tsx",
-    "api": "src/server.ts"
-  },
-  "keyDirectories": {
-    "components": "src/components",
-    "services": "src/services",
-    "api": "src/api"
-  },
-  "architecture": "client-server with React SPA and Express API",
-  "featureMap": {
-    "authentication": ["src/auth/login.ts", "src/auth/register.ts"],
-    "api": ["src/api/routes", "src/api/controllers"]
-  },
-  "learningStatus": {
-    "hasIntelligence": true,
-    "isStale": false,
-    "conceptsStored": 147,
-    "patternsStored": 23,
-    "recommendation": "ready",
-    "message": "Intelligence is ready! 147 concepts and 23 patterns available."
-  }
-}
-```
-
-### predict_coding_approach Response
-```json
-{
-  "approach": "Create new auth middleware using existing JWT pattern",
-  "suggestedPatterns": ["middleware_chain", "jwt_validation"],
-  "estimatedComplexity": "medium",
-  "reasoning": "Project uses JWT auth middleware in similar contexts",
-  "confidence": 0.87,
-  "fileRouting": {
-    "intendedFeature": "authentication",
-    "targetFiles": ["src/middleware/auth.ts", "src/auth/jwt.ts"],
-    "workType": "enhancement",
-    "suggestedStartPoint": "src/middleware/auth.ts"
-  }
-}
-```
-
-## 🎨 Agent-Specific Tips
-
-### For GitHub Copilot
-- Use the custom chat modes (see `.vscode/copilot-chat-modes.json`)
-- Reference this file in your workspace instructions
-- Always call `get_project_blueprint()` at the start of `/explain` or `/new` commands
-
-### For Claude Code
-- In Memoria integrates natively via MCP
-- Use the Task tool to delegate complex navigation to In Memoria
-- Combine blueprint + semantic search for exploration tasks
-
-### For Cursor
-- Add In Memoria MCP to your Cursor settings
-- Use composer mode with blueprint for context
-- Leverage semantic search in the chat panel
+**Note:** See full tool list with `./brain-trust4 tools in-memoria`
 
 ---
 
-**Remember**: In Memoria provides **intelligent, learned insights** from the actual codebase. Trust its recommendations - they're based on real patterns, not generic suggestions.
+## Additional Resources
 
-**Questions?** Check the full documentation in `README.md` or the implementation roadmap in `IMPLEMENTATION_ROADMAP.md`.
+- **In-Memoria Repository:** https://github.com/pi22by7/In-Memoria
+- **In-Memoria Documentation:** See `AGENT.md` in the repository for detailed tool usage
+- **OI OS Documentation:** See `docs/` directory in your OI OS installation
+- **MCP Protocol Specification:** https://modelcontextprotocol.io/
+
+---
+
+## Support
+
+For issues specific to:
+- **In-Memoria MCP Server:** Open an issue at https://github.com/pi22by7/In-Memoria
+- **OI OS Integration:** Check OI OS documentation or repository
+- **General MCP Issues:** See MCP documentation at https://modelcontextprotocol.io/
+
+---
+
+**Last Updated:** 2025-01-08  
+**Compatible With:** OI OS / Brain Trust 4, Claude Desktop, Cursor  
+**Server Version:** 0.5.8
+
