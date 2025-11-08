@@ -28,7 +28,7 @@ export class IntelligenceTools {
     return [
       {
         name: 'learn_codebase_intelligence',
-        description: 'Build intelligence database from codebase (one-time setup, ~30-60s). Required before using predict_coding_approach, get_project_blueprint, or get_pattern_recommendations. Re-run with force=true if codebase has significant changes. Most users should use auto_learn_if_needed instead - it runs this automatically when needed.',
+        description: 'Build intelligence database from codebase (one-time setup, ~30-60s for small projects, 2-5+ minutes for large projects like OI OS). Required before using predict_coding_approach, get_project_blueprint, or get_pattern_recommendations. Re-run with force=true if codebase has significant changes. Most users should use auto_learn_if_needed instead - it runs this automatically when needed. For very large projects, use maxFiles to limit processing or learn specific directories first.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -38,7 +38,17 @@ export class IntelligenceTools {
             },
             force: {
               type: 'boolean',
-              description: 'Force re-learning even if codebase was previously analyzed (use when codebase has significant changes)'
+              description: 'Force re-learning even if codebase was previously analyzed (use when codebase has significant changes)',
+              default: false
+            },
+            maxFiles: {
+              type: 'number',
+              description: 'Maximum number of files to process (useful for very large projects to avoid timeout). If not specified, processes all files.'
+            },
+            excludePatterns: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Additional glob patterns to exclude from learning (e.g., ["**/large-dir/**", "**/generated/**"])'
             }
           },
           required: ['path']
