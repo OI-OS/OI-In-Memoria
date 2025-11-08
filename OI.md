@@ -600,7 +600,7 @@ In-Memoria provides 14 tools organized into categories:
 ## Additional Resources
 
 - **In-Memoria Repository:** https://github.com/pi22by7/In-Memoria
-- **In-Memoria Documentation:** See `AGENT.md` in the repository for detailed tool usage
+- **In-Memoria Documentation:** See `OI.md` in the repository for detailed tool usage
 - **OI OS Documentation:** See `docs/` directory in your OI OS installation
 - **MCP Protocol Specification:** https://modelcontextprotocol.io/
 
