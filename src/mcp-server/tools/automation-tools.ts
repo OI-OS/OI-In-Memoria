@@ -243,8 +243,8 @@ export class AutomationTools {
         let timeoutId: NodeJS.Timeout | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            reject(new Error('Semantic analysis timed out after 5 minutes. This often happens with large projects.'));
-          }, 300000); // 5 minutes
+            reject(new Error('Semantic analysis timed out after 20 minutes. This often happens with very large projects.'));
+          }, 1200000); // 20 minutes
         });
 
         try {

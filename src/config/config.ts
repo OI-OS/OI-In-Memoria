@@ -3,8 +3,9 @@
  * Centralizes all configuration with proper defaults and validation
  */
 
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
 import { Logger } from '../utils/logger.js';
 
 export interface InMemoriaConfig {
@@ -111,25 +112,19 @@ export class ConfigManager {
   }
   
   /**
-   * Get database path for a specific project
-   * Always places the database within the analyzed project directory
+   * Get database path - fixed to OI-In-Memoria directory for MCP server
+   * For OI OS, the database is stored in the OI-In-Memoria directory, not in project directories
    */
   getDatabasePath(projectPath?: string): string {
-    const basePath = projectPath || process.cwd();
+    // For MCP server, always use OI-In-Memoria directory
+    // Get the OI-In-Memoria directory by going up from dist/config/config.js (compiled) or src/config/config.ts (source)
+    const configPath = fileURLToPath(import.meta.url);
+    // Go up 3 levels: dist/config/config.js -> dist/config -> dist -> OI-In-Memoria
+    // Or: src/config/config.ts -> src/config -> src -> OI-In-Memoria
+    const serverDir = dirname(dirname(dirname(configPath)));
+    
     const filename = this.config.database.filename;
-    
-    // Warn if filename contains path separators (indicates misconfiguration)
-    if (filename.includes('/') || filename.includes('\\')) {
-      Logger.warn(
-        '⚠️  Warning: IN_MEMORIA_DB_FILENAME contains path separators.\n' +
-        `   Current: "${filename}"\n` +
-        '   This may cause issues. Consider using a simple filename.\n' +
-        `   The database directory is determined by the project path: ${basePath}\n` +
-        '   Example: Set IN_MEMORIA_DB_FILENAME="in-memoria.db" instead of a path.'
-      );
-    }
-    
-    const dbPath = join(basePath, filename);
+    const dbPath = join(serverDir, filename);
     Logger.info(`📁 Database path resolved to: ${dbPath}`);
     return dbPath;
   }

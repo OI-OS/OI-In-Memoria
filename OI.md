@@ -26,7 +26,7 @@ AI agents should prefer **direct `brain-trust4 call` commands** over natural lan
 **Example:**
 ```bash
 # ✅ RECOMMENDED for AI agents: Direct call
-./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+./brain-trust4 call OI-In-Memoria get_project_blueprint '{"path": "."}'
 
 # ⚠️ FALLBACK: Natural language (may timeout or fail parameter extraction)
 ./oi "in-memoria get project blueprint"
@@ -36,16 +36,20 @@ For AI agents using OI OS, execute the following commands:
 
 ```bash
 # 1. Install the server
-./oi install https://github.com/pi22by7/In-Memoria.git
+./oi install https://github.com/OI-OS/OI-In-Memoria.git
 
-# 2. Fix missing schema file (if build failed)
-cd MCP-servers/In-Memoria
-mkdir -p dist/storage
-cp src/storage/schema.sql dist/storage/schema.sql
+# 2. Build the project
+cd MCP-servers/OI-In-Memoria
+npm install
+npm run build
 
-# 3. Connect the server to OI OS
+# Note: Pre-built binaries are automatically installed via npm install.
+# Rust is only needed if pre-built binaries aren't available for your platform.
+# The build will skip the Rust step if Cargo is not available.
+
+# 4. Connect the server to OI OS
 cd ../../
-./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server
+./brain-trust4 connect OI-In-Memoria node -- "$(pwd)/MCP-servers/OI-In-Memoria/dist/index.js" server
 
 # 4. Create intent mappings and parameter rules (single optimized transaction)
 sqlite3 brain-trust4.db << 'SQL'
@@ -139,7 +143,7 @@ SQL
 
 # 6. Verify installation
 ./oi list | grep in-memoria
-./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+./brain-trust4 call OI-In-Memoria get_project_blueprint '{"path": "."}'
 ./oi "in-memoria get blueprint"
 ```
 
@@ -150,7 +154,13 @@ SQL
 - **Node.js 18+** - Required for running the MCP server
 - **OI OS / Brain Trust 4** - The OI OS platform
 - **SQLite3** - For database operations (usually pre-installed)
-- **Optional: Rust 1.70+** - For building from source (not required for basic functionality)
+- **Rust 1.70+** - **Optional** (only needed if pre-built binaries aren't available)
+  - Pre-built binaries are automatically installed via `npm install` for supported platforms
+  - Supported platforms: `darwin-x64`, `darwin-arm64`, `linux-x64`, `win32-x64`
+  - Rust is only needed if:
+    - Your platform isn't supported by pre-built binaries
+    - You want to build from source
+    - You're developing/contributing to the project
 
 ---
 
@@ -160,17 +170,30 @@ SQL
 
 ```bash
 # From your OI OS project root
-./oi install https://github.com/pi22by7/In-Memoria.git
+./oi install https://github.com/OI-OS/OI-In-Memoria.git
 ```
 
 **Note:** The `oi install` command will clone the repository and install npm dependencies, but may fail at the connection step. This is normal - proceed with manual connection.
 
-### Step 2: Fix Missing Files (if build failed)
+### Step 2: Build the Project
 
-If the build failed (e.g., Rust/Cargo not installed), you may need to manually copy the schema file:
+**Note:** Pre-built binaries are automatically installed via `npm install` for supported platforms:
+- `darwin-x64` (Intel Mac)
+- `darwin-arm64` (Apple Silicon Mac)
+- `linux-x64`
+- `win32-x64`
+
+Rust is **not required** for normal installation. The build will automatically use pre-built binaries if available.
 
 ```bash
-cd MCP-servers/In-Memoria
+cd MCP-servers/OI-In-Memoria
+npm install
+npm run build
+```
+
+If the build fails due to missing schema file, manually copy it:
+
+```bash
 mkdir -p dist/storage
 cp src/storage/schema.sql dist/storage/schema.sql
 ```
@@ -178,7 +201,7 @@ cp src/storage/schema.sql dist/storage/schema.sql
 ### Step 3: Verify Installation
 
 ```bash
-cd MCP-servers/In-Memoria
+cd MCP-servers/OI-In-Memoria
 ls -la dist/index.js
 # Ensure the built file exists
 ```
@@ -192,10 +215,10 @@ ls -la dist/index.js
 From your OI OS project root:
 
 ```bash
-./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server
+./brain-trust4 connect OI-In-Memoria node -- "$(pwd)/MCP-servers/OI-In-Memoria/dist/index.js" server
 ```
 
-**Note:** The server will automatically initialize its database on first run. The database file (`in-memoria.db`) will be created in the `MCP-servers/In-Memoria/` directory.
+**Note:** The server will automatically initialize its database on first run. The database file (`in-memoria.db`) will be created in the `MCP-servers/OI-In-Memoria/` directory.
 
 ### Step 2: Verify Connection
 
@@ -203,11 +226,11 @@ From your OI OS project root:
 ./oi list
 # Should show "in-memoria" in the server list
 
-./oi status in-memoria
+./oi status OI-In-Memoria
 # Should show server status and capabilities
 
 # Test with direct call (most reliable method)
-./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+./brain-trust4 call OI-In-Memoria get_project_blueprint '{"path": "."}'
 ```
 
 ---
@@ -292,17 +315,33 @@ Parameter extractors are configured in `parameter_extractors.toml.default`. The 
 
 ### First-Time Learning
 
-Before using In-Memoria tools, you should learn your codebase:
+Before using In-Memoria tools, you should learn your codebase. The database will be created automatically in `MCP-servers/OI-In-Memoria/in-memoria.db`.
+
+**Option 1: Auto-learn (Recommended)**
 
 ```bash
-# Option 1: Auto-learn (recommended - smart detection)
-./brain-trust4 call in-memoria auto_learn_if_needed '{"path": "."}'
+# Using direct MCP call (most reliable)
+./brain-trust4 call OI-In-Memoria auto_learn_if_needed '{"path": "./"}'
 
-# Option 2: Force learning
-./brain-trust4 call in-memoria learn_codebase_intelligence '{"path": ".", "force": true}'
+# Or use the auto-learn script (includes 25-minute timeout)
+./MCP-servers/OI-In-Memoria/auto-learn.sh
 ```
 
-**Note:** Learning takes 30-60 seconds depending on codebase size. The system will automatically detect if learning is needed when you call other tools.
+**Option 2: Force Learning**
+
+```bash
+./brain-trust4 call OI-In-Memoria learn_codebase_intelligence '{"path": "./", "force": true}'
+```
+
+**Important Notes:**
+- Use `"./"` (with quotes) for the current directory path, not `"."` without quotes
+- Learning time varies:
+  - Small projects (< 50 files): 30-60 seconds
+  - Medium projects (50-200 files): 2-5 minutes
+  - Large projects (200+ files): 5-20 minutes
+- The system has a 20-minute timeout for semantic analysis
+- The database is stored in `MCP-servers/OI-In-Memoria/in-memoria.db` (not in project root)
+- The system will automatically detect if learning is needed when you call other tools
 
 ### Using Natural Language Queries
 
@@ -322,6 +361,9 @@ After setup, you can use natural language queries:
 ./oi "in-memoria predict add password reset functionality"
 ```
 
+**Database Location:**
+The database file (`in-memoria.db`) is stored in the `MCP-servers/OI-In-Memoria/` directory, not in the project root. This ensures all intelligence data is centralized in the server directory.
+
 ---
 
 ## Verification & Testing
@@ -329,7 +371,7 @@ After setup, you can use natural language queries:
 ### Test 1: Check Server Connection
 
 ```bash
-./oi status in-memoria
+./oi status OI-In-Memoria
 ```
 
 Should show:
@@ -341,15 +383,17 @@ Should show:
 ### Test 2: Get Project Blueprint
 
 ```bash
-./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+./brain-trust4 call OI-In-Memoria get_project_blueprint '{"path": "./"}'
 ```
 
 Should return project blueprint with tech stack, entry points, and learning status.
 
+**Path Format:** Always use `"./"` (with quotes) for the current directory path in JSON arguments, not `"."` without quotes.
+
 ### Test 3: System Status
 
 ```bash
-./brain-trust4 call in-memoria get_system_status '{}'
+./brain-trust4 call OI-In-Memoria get_system_status '{}'
 ```
 
 Should return system health information.
@@ -357,10 +401,43 @@ Should return system health information.
 ### Test 4: Health Check
 
 ```bash
-./brain-trust4 call in-memoria health_check '{}'
+./brain-trust4 call OI-In-Memoria health_check '{}'
 ```
 
 Should verify setup and configuration.
+
+### Test 5: Direct MCP Server Call (Without OI/Brain-Trust4)
+
+You can call the server directly using the MCP protocol without OI or brain-trust4:
+
+**Option 1: Using the provided shell script (recommended):**
+
+```bash
+# From project root
+./MCP-servers/OI-In-Memoria/auto-learn.sh
+```
+
+**Option 2: Using Node.js directly:**
+
+```bash
+# From project root
+node MCP-servers/OI-In-Memoria/auto-learn.js
+```
+
+**What it does:**
+- Spawns the MCP server process directly
+- Initializes MCP protocol connection
+- Calls `auto_learn_if_needed` with `path: "./"`
+- Waits up to 25 minutes for completion (matches 20-minute server timeout)
+- Displays the result
+
+**Important Notes:**
+- Use `path: "./"` (with quotes) for current directory, not `"."`
+- The server communicates via JSON-RPC 2.0 over stdio
+- Responses are sent as JSON on stdout
+- Server logs/errors are sent to stderr
+- Learning operations can take 2-5+ minutes for large codebases
+- The script is located in `MCP-servers/OI-In-Memoria/auto-learn.js` (JavaScript) and `auto-learn.sh` (shell wrapper)
 
 ---
 
@@ -371,11 +448,11 @@ Should verify setup and configuration.
 **Error:** "Server closed connection" or "Initialization failed"
 
 **Solutions:**
-1. Verify `dist/index.js` exists: `ls -la MCP-servers/In-Memoria/dist/index.js`
-2. Check `dist/storage/schema.sql` exists: `ls -la MCP-servers/In-Memoria/dist/storage/schema.sql`
-3. If schema.sql is missing, copy it: `cp src/storage/schema.sql dist/storage/schema.sql`
+1. Verify `dist/index.js` exists: `ls -la MCP-servers/OI-In-Memoria/dist/index.js`
+2. Check `dist/storage/schema.sql` exists: `ls -la MCP-servers/OI-In-Memoria/dist/storage/schema.sql`
+3. If schema.sql is missing, copy it: `cd MCP-servers/OI-In-Memoria && cp src/storage/schema.sql dist/storage/schema.sql`
 4. Check Node.js is installed: `node --version` (should be 18+)
-5. Check database initialization: Look for `in-memoria.db` in `MCP-servers/In-Memoria/`
+5. Check database initialization: Look for `in-memoria.db` in `MCP-servers/OI-In-Memoria/`
 
 ### Database Initialization Fails
 
@@ -383,7 +460,7 @@ Should verify setup and configuration.
 
 **Solution:**
 ```bash
-cd MCP-servers/In-Memoria
+cd MCP-servers/OI-In-Memoria
 mkdir -p dist/storage
 cp src/storage/schema.sql dist/storage/schema.sql
 ```
@@ -393,8 +470,8 @@ cp src/storage/schema.sql dist/storage/schema.sql
 **Error:** "Tool not found" or tools list is empty
 
 **Solutions:**
-1. Verify server connection: `./oi status in-memoria`
-2. Restart server connection: `./brain-trust4 connect in-memoria node -- "$(pwd)/MCP-servers/In-Memoria/dist/index.js" server`
+1. Verify server connection: `./oi status OI-In-Memoria`
+2. Restart server connection: `./brain-trust4 connect OI-In-Memoria node -- "$(pwd)/MCP-servers/OI-In-Memoria/dist/index.js" server`
 3. Check server logs for errors
 
 ### Learning Fails or Takes Too Long
@@ -402,19 +479,57 @@ cp src/storage/schema.sql dist/storage/schema.sql
 **Error:** Learning times out or fails
 
 **Solutions:**
-1. Check codebase size - very large codebases may take longer
+1. Check codebase size - very large codebases may take longer (5-20 minutes for 200+ files)
 2. Try with `force: false` first: `auto_learn_if_needed`
-3. Check database permissions: Ensure write access to `MCP-servers/In-Memoria/`
-4. Check disk space: Learning creates database files
+3. Check database permissions: Ensure write access to `MCP-servers/OI-In-Memoria/`
+4. Verify database location: The database is stored in `MCP-servers/OI-In-Memoria/in-memoria.db`, not in the project root
+5. Check disk space: Learning creates database files
+6. For very large codebases, use `maxFiles` to limit processing:
+   ```bash
+   ./brain-trust4 call OI-In-Memoria learn_codebase_intelligence '{"path": "./", "maxFiles": 100}'
+   ```
 
-### Rust Build Errors (Optional)
+### Learning Timeout Errors
 
-**Error:** "spawn cargo" or "ENOENT: cargo"
+**Error:** "Semantic analysis timed out after 20 minutes" or "Learning process timed out"
 
-**Note:** Rust/Cargo is **optional** for basic functionality. The server works with pre-compiled TypeScript. If you want full performance:
+**Solutions:**
+1. For very large codebases, use `maxFiles` parameter to limit processing:
+   ```bash
+   ./brain-trust4 call OI-In-Memoria learn_codebase_intelligence '{"path": "./", "maxFiles": 100}'
+   ```
+2. Learn specific directories first, then expand:
+   ```bash
+   ./brain-trust4 call OI-In-Memoria learn_codebase_intelligence '{"path": "./src"}'
+   ```
+3. The timeout is set to 20 minutes. For extremely large projects, you may need to process in chunks.
 
-1. Install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-2. Rebuild: `cd MCP-servers/In-Memoria && npm run build`
+### Native Binary Loading Errors
+
+**Error:** "Failed to load native binary" or "Unsupported platform"
+
+**Solutions:**
+1. Verify pre-built binaries are installed:
+   ```bash
+   ls -la MCP-servers/OI-In-Memoria/node_modules/@in-memoria/
+   ```
+2. Reinstall dependencies:
+   ```bash
+   cd MCP-servers/OI-In-Memoria
+   npm install
+   ```
+3. If your platform isn't supported, you can build from source (requires Rust):
+   ```bash
+   # Install Rust
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+   source "$HOME/.cargo/env"
+   
+   # Build from source
+   cd MCP-servers/OI-In-Memoria
+   npm run build
+   ```
+
+**Note:** For most users, pre-built binaries are automatically installed and Rust is not needed.
 
 ---
 

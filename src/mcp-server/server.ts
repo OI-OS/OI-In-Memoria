@@ -18,6 +18,8 @@ import { SemanticVectorDB } from '../storage/vector-db.js';
 import { validateInput, VALIDATION_SCHEMAS } from './validation.js';
 import { config } from '../config/config.js';
 import { Logger } from '../utils/logger.js';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export class CodeCartographerMCP {
   private server: Server;
@@ -51,9 +53,10 @@ export class CodeCartographerMCP {
       Logger.info('Initializing In Memoria components...');
 
       // Initialize storage using configuration management
-      // Database path is determined by config based on the analyzed project
-      const appConfig = config.getConfig();
-      const dbPath = config.getDatabasePath(); // Will use current directory as project path
+      // Database path is fixed to OI-In-Memoria directory for MCP server
+      const __filename = fileURLToPath(import.meta.url);
+      const serverDir = dirname(dirname(dirname(__filename))); // Go up from dist/mcp-server/server.js to OI-In-Memoria
+      const dbPath = join(serverDir, 'in-memoria.db');
       Logger.info(`Attempting to initialize database at: ${dbPath}`);
 
       try {

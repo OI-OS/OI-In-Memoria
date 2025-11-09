@@ -16,7 +16,7 @@
     "schemas"
   ],
   "scripts": {
-    "build": "tsc && npm run build:rust && npm run copy-assets && npm run fix-permissions",
+    "build": "tsc && (npm run build:rust || echo '⚠️  Rust build skipped (cargo not available)') && npm run copy-assets && npm run fix-permissions",
     "build:ts": "tsc && npm run copy-assets && npm run fix-permissions",
     "copy-assets": "node -e \"require('fs').mkdirSync('dist/storage', {recursive: true}); require('fs').copyFileSync('src/storage/schema.sql', 'dist/storage/schema.sql')\"",
     "fix-permissions": "node -e \"try { require('fs').chmodSync('dist/index.js', '755'); } catch (e) { /* chmod not critical on Windows */ }\"",

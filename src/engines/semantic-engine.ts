@@ -221,7 +221,7 @@ export class SemanticEngine {
       let progressTimer: NodeJS.Timeout | null = null;
       const timeoutPromise = new Promise<never>((_, reject) => {
         let elapsed = 0;
-        const timeoutDuration = 300000; // 5 minutes
+        const timeoutDuration = 1200000; // 20 minutes
         const progressInterval = 2000; // Update every 2 seconds
         
         progressTimer = setInterval(() => {
@@ -229,7 +229,7 @@ export class SemanticEngine {
           
           if (elapsed >= timeoutDuration) {
             if (progressTimer) clearInterval(progressTimer);
-            reject(new Error('Learning process timed out after 5 minutes. This can happen with very large Svelte/Vue codebases.'));
+            reject(new Error('Learning process timed out after 20 minutes. This can happen with very large codebases.'));
           } else if (progressCallback && estimatedFiles > 0) {
             // Provide estimated progress based on time (rough heuristic)
             const estimatedProgress = Math.min(Math.floor((elapsed / timeoutDuration) * estimatedFiles), estimatedFiles - 1);
