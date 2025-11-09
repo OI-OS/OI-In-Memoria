@@ -132,6 +132,15 @@ INSERT OR REPLACE INTO parameter_rules (server_name, tool_name, tool_signature, 
 
 COMMIT;
 SQL
+
+# 5. Add parameter extractors to TOML (already in parameter_extractors.toml.default)
+# The extractors for all In-Memoria tools are already configured
+# See "Parameter Extractors" section for complete list
+
+# 6. Verify installation
+./oi list | grep in-memoria
+./brain-trust4 call in-memoria get_project_blueprint '{"path": "."}'
+./oi "in-memoria get blueprint"
 ```
 
 ---
@@ -232,6 +241,50 @@ See the [AI Agent Quick Installation](#ai-agent-quick-installation) section for 
 - `learn_codebase_intelligence`: `path` is required
 - `predict_coding_approach`: `problemDescription` is required
 - `get_pattern_recommendations`: `problemDescription` is required
+
+---
+
+## Parameter Extractors
+
+Parameter extractors are configured in `parameter_extractors.toml.default`. The following extractors are available for In-Memoria tools:
+
+**Path Extractors:**
+- `in-memoria::get_project_blueprint.path` - Extract file/directory path
+- `in-memoria::analyze_codebase.path` - Extract path for analysis
+- `in-memoria::learn_codebase_intelligence.path` - Extract path for learning
+- `in-memoria::auto_learn_if_needed.path` - Extract path for auto-learning
+
+**Query Extractors:**
+- `in-memoria::search_codebase.query` - Extract search query text
+- `in-memoria::get_semantic_insights.query` - Extract semantic query
+
+**Problem Description Extractors:**
+- `in-memoria::predict_coding_approach.problemDescription` - Extract problem/feature description
+- `in-memoria::get_pattern_recommendations.problemDescription` - Extract pattern recommendation request
+
+**Type and Limit Extractors:**
+- `in-memoria::search_codebase.type` - Extract search type (semantic/text/pattern)
+- `in-memoria::search_codebase.limit` - Extract numeric limit
+- `in-memoria::get_semantic_insights.limit` - Extract limit for insights
+- `in-memoria::get_semantic_insights.conceptType` - Extract concept type
+
+**Flag Extractors:**
+- `in-memoria::get_project_blueprint.includeFeatureMap` - Extract feature map flag
+- `in-memoria::analyze_codebase.includeFileContent` - Extract file content flag
+- `in-memoria::predict_coding_approach.includeFileRouting` - Extract file routing flag
+- `in-memoria::get_pattern_recommendations.includeRelatedFiles` - Extract related files flag
+- `in-memoria::get_developer_profile.includeRecentActivity` - Extract recent activity flag
+- `in-memoria::get_developer_profile.includeWorkContext` - Extract work context flag
+- `in-memoria::auto_learn_if_needed.includeSetupSteps` - Extract setup steps flag
+- `in-memoria::learn_codebase_intelligence.force` - Extract force flag
+- `in-memoria::auto_learn_if_needed.force` - Extract force flag
+- `in-memoria::auto_learn_if_needed.skipLearning` - Extract skip learning flag
+
+**Context Extractors:**
+- `in-memoria::predict_coding_approach.context` - Extract context information
+- `in-memoria::get_pattern_recommendations.currentFile` - Extract current file path
+
+**Note:** All extractors are already configured in `parameter_extractors.toml.default`. No additional configuration is needed.
 
 ---
 
