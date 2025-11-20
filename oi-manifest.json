@@ -1,0 +1,118 @@
+{
+  "server_name": "in-memoria",
+  "version": "1.0.0",
+  "intents": [
+    {
+      "keyword": "in-memoria get blueprint",
+      "tool_name": "get_project_blueprint",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria blueprint",
+      "tool_name": "get_project_blueprint",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria project blueprint",
+      "tool_name": "get_project_blueprint",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria analyze codebase",
+      "tool_name": "analyze_codebase",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria analyze",
+      "tool_name": "analyze_codebase",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria search codebase",
+      "tool_name": "search_codebase",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria search",
+      "tool_name": "search_codebase",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria learn",
+      "tool_name": "learn_codebase_intelligence",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria learn codebase",
+      "tool_name": "learn_codebase_intelligence",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria auto learn",
+      "tool_name": "auto_learn_if_needed",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria predict approach",
+      "tool_name": "predict_coding_approach",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria predict",
+      "tool_name": "predict_coding_approach",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria get patterns",
+      "tool_name": "get_pattern_recommendations",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria patterns",
+      "tool_name": "get_pattern_recommendations",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria semantic insights",
+      "tool_name": "get_semantic_insights",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria insights",
+      "tool_name": "get_semantic_insights",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria developer profile",
+      "tool_name": "get_developer_profile",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria profile",
+      "tool_name": "get_developer_profile",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria system status",
+      "tool_name": "get_system_status",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria status",
+      "tool_name": "get_system_status",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria health",
+      "tool_name": "health_check",
+      "priority": 10
+    },
+    {
+      "keyword": "in-memoria health check",
+      "tool_name": "health_check",
+      "priority": 10
+    }
+  ],
+  "parameter_extractors": {},
+  "reminder_message": "In-Memoria MCP server for persistent intelligence infrastructure. Provides codebase analysis, learning, and semantic search capabilities."
+}
