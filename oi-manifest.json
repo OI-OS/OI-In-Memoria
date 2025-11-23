@@ -113,7 +113,20 @@
       "priority": 10
     }
   ],
-  "parameter_extractors": {},
+  "parameter_extractors": {
+    "analyze_codebase": {
+      "OI-In-Memoria::analyze_codebase.path": "conditional:if_matches:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|then:regex:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|else:default:./"
+    },
+    "get_project_blueprint": {
+      "OI-In-Memoria::get_project_blueprint.path": "conditional:if_matches:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|then:regex:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|else:default:./"
+    },
+    "learn_codebase_intelligence": {
+      "OI-In-Memoria::learn_codebase_intelligence.path": "conditional:if_matches:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|then:regex:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|else:default:./"
+    },
+    "auto_learn_if_needed": {
+      "OI-In-Memoria::auto_learn_if_needed.path": "conditional:if_matches:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|then:regex:(?:path|directory|folder|project)[\\s:]+([^\\s]+)|else:default:./"
+    }
+  },
   "reminder_message": "In-Memoria MCP server for persistent intelligence infrastructure. Provides codebase analysis, learning, and semantic search capabilities.",
-  "post_install_instructions": "After installation, run: cd MCP-servers/OI-In-Memoria && ./auto-learn.sh [project_path] to auto-learn your codebase. Default path is project root (../..). This can take 30-60 seconds for small projects or 2-5+ minutes for large projects. The script runs in the background and bypasses the 30-second MCP client timeout."
+  "post_install_instructions": "After installation, run: cd MCP-servers/OI-In-Memoria && ./auto-learn.sh [project_path] to auto-learn your codebase. Default path is project root (../..). This can take 30-60 seconds for small projects or 2-5+ minutes for large projects. The script runs in the background and bypasses the 30-second MCP client timeout. For analyze_codebase operations that exceed 30 seconds, use: node analyze-codebase.js [project_path] to bypass the timeout."
 }
