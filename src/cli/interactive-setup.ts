@@ -90,20 +90,15 @@ export class InteractiveSetup {
     config.enableRealTimeAnalysis = await this.confirm('Enable real-time analysis?', true);
     config.enablePatternLearning = await this.confirm('Enable pattern learning?', true);
 
-    const enhancedEmbeddings = await this.confirm('Enable enhanced vector embeddings? (requires OpenAI API key)', false);
-    config.enableVectorEmbeddings = enhancedEmbeddings;
+    console.log('\n📊 Vector Embeddings:');
+    console.log('   In Memoria uses local embeddings (transformers.js) for semantic code search.');
+    console.log('   • 100% free - no API keys needed');
+    console.log('   • Runs entirely on your machine');
+    console.log('   • High quality embeddings with all-MiniLM-L6-v2 model');
+    console.log('   ');
 
-    if (enhancedEmbeddings) {
-      const existingKey = process.env.OPENAI_API_KEY;
-      if (existingKey) {
-        const useExisting = await this.confirm(`Use existing OpenAI API key from environment?`, true);
-        if (!useExisting) {
-          config.openaiApiKey = await this.prompt('OpenAI API Key', '', true);
-        }
-      } else {
-        config.openaiApiKey = await this.prompt('OpenAI API Key', '', true);
-      }
-    }
+    // Always enable vector embeddings (using local)
+    config.enableVectorEmbeddings = true;
 
     // File watching configuration
     console.log('\n📁 File Watching Configuration:');
@@ -169,7 +164,7 @@ export class InteractiveSetup {
 
     // Create configuration file
     const configFile = {
-      version: "0.5.8",
+      version: "0.6.0",
       project: {
         name: config.projectName,
         languages: config.languages
@@ -199,15 +194,6 @@ export class InteractiveSetup {
     console.log(`\n✅ Configuration saved`);
     console.log(`   📄 Location: ${configPath}`);
 
-    // Create environment file if API key provided
-    if (config.openaiApiKey) {
-      const envPath = join(configDir, '.env');
-      writeFileSync(envPath, `OPENAI_API_KEY=${config.openaiApiKey}\n`);
-      console.log(`\n✅ Environment file created`);
-      console.log(`   🔒 Location: ${envPath}`);
-      console.log(`   ⚠️  Remember to add .in-memoria/.env to your .gitignore!`);
-    }
-
     // Update .gitignore
     await this.updateGitignore(config.projectPath);
   }
@@ -226,7 +212,7 @@ export class InteractiveSetup {
     try {
       // Initialize components
       database = new SQLiteDatabase(join(config.projectPath, 'in-memoria.db'));
-      vectorDB = new SemanticVectorDB(config.openaiApiKey);
+      vectorDB = new SemanticVectorDB(); // Uses local embeddings only
       semanticEngine = new SemanticEngine(database, vectorDB);
       patternEngine = new PatternEngine(database);
 
@@ -439,7 +425,9 @@ export class InteractiveSetup {
             }
           } else if (char >= ' ') {
             input += char;
-            process.stdout.write('*');
+            // Clear any echoed character and write asterisk
+            // In raw mode, some terminals still echo, so we need to clear it
+            process.stdout.write('\b \b*');
           }
         };
 

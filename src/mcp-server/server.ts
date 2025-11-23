@@ -36,7 +36,7 @@ export class CodeCartographerMCP {
     this.server = new Server(
       {
         name: 'in-memoria',
-        version: '0.5.8',
+        version: '0.6.0',
       },
       {
         capabilities: {
@@ -68,7 +68,7 @@ export class CodeCartographerMCP {
         throw new Error(`Database initialization failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
       }
 
-      this.vectorDB = new SemanticVectorDB(process.env.OPENAI_API_KEY);
+      this.vectorDB = new SemanticVectorDB(); // Uses local embeddings only
       Logger.info('Vector database initialized');
 
       // Initialize engines

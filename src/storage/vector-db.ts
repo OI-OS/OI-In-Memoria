@@ -1,8 +1,6 @@
 import { Surreal } from 'surrealdb';
 import * as SurrealNodeModule from '@surrealdb/node';
-import { CircuitBreaker, createOpenAICircuitBreaker } from '../utils/circuit-breaker.js';
 import { globalProfiler, PerformanceOptimizer } from '../utils/performance-profiler.js';
-import OpenAI from 'openai';
 import { pipeline } from '@xenova/transformers';
 import { Logger } from '../utils/logger.js';
 
@@ -37,33 +35,22 @@ interface CodeDocument {
 export class SemanticVectorDB {
   private db: Surreal;
   private initialized: boolean = false;
-  private openaiCircuitBreaker: CircuitBreaker;
-  private apiKey?: string;
-  private openaiClient: OpenAI | undefined;
   private localEmbeddingPipeline: any; // Use any to avoid complex typing issues
 
   // Real vector operations with caching
   private embeddingCache = new Map<string, number[]>();
   private readonly EMBEDDING_CACHE_SIZE = 1000;
-  private readonly EMBEDDING_DIMENSION = 1536; // OpenAI ada-002 dimension
   private readonly LOCAL_EMBEDDING_DIMENSION = 384; // All-MiniLM-L6-v2 dimension
-  
+
   // Embedding progress tracking
   private hasLoggedEmbeddingStart = false;
 
-  constructor(apiKey?: string) {
+  constructor(_apiKey?: string) {
     this.db = new Surreal({
       engines: (SurrealNodeModule as any).surrealdbNodeEngines(),
     });
 
-    this.apiKey = apiKey || process.env.OPENAI_API_KEY;
-    this.openaiCircuitBreaker = createOpenAICircuitBreaker();
-
-    // Initialize OpenAI client if API key is available
-    if (this.apiKey) {
-      this.openaiClient = new OpenAI({ apiKey: this.apiKey });
-    }
-
+    // API key parameter kept for backwards compatibility but unused
     this.initializeLocalEmbeddings();
   }
 
@@ -87,9 +74,10 @@ export class SemanticVectorDB {
 
   async initialize(collectionName: string = 'in-memoria'): Promise<void> {
     try {
-      // Use in-memory embedded mode for SurrealDB with Node.js engine
-      // Falls back to persistent surrealkv:// if needed for durability
-      await this.db.connect('mem://');
+      // Use SurrealKV for persistent storage of vector embeddings
+      // IMPORTANT: Requires SURREAL_SYNC_DATA=true for crash safety
+      const dbPath = process.env.IN_MEMORIA_VECTOR_DB_PATH || 'in-memoria-vectors.db';
+      await this.db.connect(`surrealkv://${dbPath}`);
 
       // Use database and namespace
       await this.db.use({
@@ -299,7 +287,7 @@ export class SemanticVectorDB {
   }
 
   /**
-   * Generate real semantic embeddings using OpenAI or sophisticated local method
+   * Generate real semantic embeddings using local method
    */
   private async generateRealSemanticEmbedding(code: string): Promise<number[]> {
     // Check cache first
@@ -308,58 +296,18 @@ export class SemanticVectorDB {
       return this.embeddingCache.get(cacheKey)!;
     }
 
-    let embedding: number[];
-
     // Log once at start of embedding process
     if (!this.hasLoggedEmbeddingStart) {
-      if (this.openaiClient && this.apiKey && this.apiKey.length > 0) {
-        Logger.info('🔧 Initializing OpenAI embedding pipeline...');
-      } else {
-        Logger.info('🔧 Initializing local embedding pipeline...');
-      }
+      Logger.info('🔧 Initializing local embedding pipeline...');
       this.hasLoggedEmbeddingStart = true;
     }
 
-    // Try OpenAI embeddings first if API key is available
-    if (this.openaiClient && this.apiKey && this.apiKey.length > 0) {
-      try {
-        embedding = await this.getOpenAIEmbedding(code);
-      } catch (error: unknown) {
-        Logger.warn('⚠️  OpenAI embedding failed, using local embedding:', error instanceof Error ? error.message : String(error));
-        embedding = await this.getLocalEmbedding(code);
-      }
-    } else {
-      // Use local embedding
-      embedding = await this.getLocalEmbedding(code);
-    }
+    // Use local embedding
+    const embedding = await this.getLocalEmbedding(code);
 
     // Cache the result
     this.cacheEmbedding(cacheKey, embedding);
     return embedding;
-  }
-
-  /**
-   * Get embeddings from OpenAI API using the official SDK
-   */
-  private async getOpenAIEmbedding(code: string): Promise<number[]> {
-    if (!this.openaiClient) {
-      throw new Error('OpenAI client not initialized');
-    }
-
-    return this.openaiCircuitBreaker.execute(async () => {
-      const cleanCode = this.preprocessCodeForEmbedding(code);
-
-      const response = await this.openaiClient!.embeddings.create({
-        model: 'text-embedding-ada-002',
-        input: cleanCode,
-      });
-
-      if (!response.data || response.data.length === 0) {
-        throw new Error('No embeddings returned from OpenAI API');
-      }
-
-      return response.data[0].embedding;
-    });
   }
 
   /**

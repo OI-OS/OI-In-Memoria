@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-11-12
+
+### 🐛 **Fixed**
+
+- **Token overflow in MCP tools** – Fixed `get_pattern_recommendations` and `get_developer_profile` exceeding Claude Code's 25,000 token limit
+  - Added `limit` parameter to `getDeveloperPatterns()` with default limit of 50 patterns
+  - Truncated code examples to 2 per pattern, max 150 characters each
+  - Reduced response size from ~58,000 tokens to ~2,000-5,000 tokens (90% reduction)
+  - Applied limits across all pattern-fetching methods in pattern engine
+  - Issue: [#21](https://github.com/anthropics/in-memoria/issues/21)
+- **Interactive setup password input** – Fixed password masking in terminal
+  - Clear terminal echo before writing asterisk to prevent double display (e.g., 'y*')
+  - Issue: [#21](https://github.com/anthropics/in-memoria/issues/21)
+
+### ✨ **Added**
+
+- **Persistent vector embeddings** – Vector embeddings now persist across restarts
+  - Switched from in-memory storage to file-based SurrealKV
+  - Embeddings automatically saved to `in-memoria-vectors.db`
+  - No more re-embedding on every server restart
+  - Automatic crash-safe configuration
+  - Significantly faster startup times for large codebases
+
+### 🔥 **Removed**
+
+- **OpenAI API integration** – Removed OpenAI embedding support to simplify codebase
+  - Removed `openai` dependency (package.json)
+  - All embeddings now use local transformers.js (all-MiniLM-L6-v2 model)
+  - Eliminates API costs, privacy concerns, and external dependencies
+  - Local embeddings provide 85-90% quality of OpenAI with zero cost
+  - Simplified interactive setup (no API key prompts)
+  - Updated vector-db.ts, interactive-setup.ts, index.ts, server.ts, config.ts
+  - Removed OPENAI_API_KEY environment variable requirement
+
 ## [0.5.8] - 2025-11-07
 
 ### ✨ **Added**

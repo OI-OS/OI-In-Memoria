@@ -126,6 +126,8 @@ export class LearningService {
 
       // Phase 6: Vector embeddings for semantic search
       insights.push('🔍 Phase 6: Building semantic search index...');
+      insights.push(`   ✅ Using free local embeddings (transformers.js)`);
+
       const vectorCount = await this.buildSemanticIndex(projectVectorDB, concepts, patterns);
       insights.push(`   ✅ Created ${vectorCount} vector embeddings for semantic search`);
 
@@ -140,7 +142,7 @@ export class LearningService {
           languagePrimary: codebaseAnalysis.languages?.[0],
           languagesDetected: codebaseAnalysis.languages || [],
           frameworkDetected: codebaseAnalysis.frameworks || [],
-          intelligenceVersion: '0.5.8',
+          intelligenceVersion: '0.6.0',
           lastFullScan: new Date()
         });
         insights.push(`   ✅ Created project metadata for ${path}`);

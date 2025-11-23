@@ -35,7 +35,7 @@ In Memoria is an MCP server that learns from your actual codebase and remembers 
 
 Think of it as giving your AI pair programmer a notepad that doesn't get wiped clean every time you restart the session.
 
-**Current version: 0.5.8** - [See what's changed](CHANGELOG.md)
+**Current version: 0.6.0** - [See what's changed](CHANGELOG.md)
 
 ### What It Does
 
@@ -148,7 +148,7 @@ In Memoria is built on Rust + TypeScript, using the Model Context Protocol to co
 **TypeScript Layer** - MCP server and orchestration:
 
 - 13 specialized tools for AI assistants (organized into 4 categories)
-- SQLite for structured data, SurrealDB (in-memory) for vector search
+- SQLite for structured data, SurrealDB with SurrealKV for persistent vector embeddings
 - File watching for incremental updates
 - Smart routing that maps features to files
 
@@ -156,8 +156,8 @@ In Memoria is built on Rust + TypeScript, using the Model Context Protocol to co
 
 - Everything stays on your machine
 - SQLite for patterns and metadata
-- SurrealDB in-memory mode for vector embeddings and semantic search
-- Optional OpenAI API or local transformers.js for embeddings (Xenova/all-MiniLM-L6-v2)
+- SurrealDB with SurrealKV backend for persistent vector embeddings
+- Local transformers.js for embeddings (Xenova/all-MiniLM-L6-v2)
 
 ### What Makes It Different
 
@@ -292,12 +292,10 @@ Build artifacts (`node_modules/`, `dist/`, `.next/`, etc.) are automatically fil
 
 ### Known Limitations
 
-- ⚠️ Semantic search works best with OpenAI embeddings (requires API key) but falls back to local transformers.js
 - ⚠️ Large codebases (100k+ files) can be slow on first analysis
 - ⚠️ Pattern accuracy improves with codebase consistency
 - ⚠️ Some languages have better tree-sitter support than others
 - ⚠️ Documentation could be more comprehensive
-- ⚠️ SurrealDB runs in-memory mode (data persists in SQLite, vectors rebuilt on restart)
 
 ### We Need Your Help
 
@@ -390,7 +388,7 @@ npm run build:rust  # Build Rust components
 A: No, it enhances them. In Memoria provides the memory and context that tools like Claude, Copilot, and Cursor can use to give better suggestions.
 
 **Q: What data is collected?**
-A: Everything stays local. No telemetry, no phone-home. Your code never leaves your machine. The only optional external call is to OpenAI API for embeddings (if you provide an API key), otherwise it uses local transformers.js models.
+A: Everything stays local. No telemetry, no phone-home. Your code never leaves your machine. All embeddings are generated locally using transformers.js models.
 
 **Q: How accurate is pattern learning?**
 A: It improves with codebase size and consistency. Projects with established patterns see better results than small or inconsistent codebases. The system learns from frequency and repetition.
@@ -447,7 +445,7 @@ Built with ❤️ by [@pi22by7](https://github.com/pi22by7) for the AI-assisted 
 
 **Try it**: `npx in-memoria server`
 
-**Latest release**: [v0.5.8](CHANGELOG.md) - Smooth progress tracking and Phase 1-4 complete
+**Latest release**: [v0.6.0](CHANGELOG.md) - Smooth progress tracking and Phase 1-4 complete
 
 _In memoria: in memory. Because your AI assistant should remember._
 
