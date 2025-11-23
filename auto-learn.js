@@ -9,6 +9,10 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '../..');
 const serverScript = path.join(__dirname, 'dist/index.js');
 
+// Accept path argument or default to project root
+const learnPath = process.argv[2] || projectRoot;
+const resolvedPath = path.isAbsolute(learnPath) ? learnPath : path.resolve(projectRoot, learnPath);
+
 const server = spawn('node', [serverScript, 'server'], {
   stdio: ['pipe', 'pipe', 'pipe'],
   cwd: projectRoot
@@ -47,10 +51,10 @@ server.stdout.on('data', (data) => {
               method: 'tools/call',
               params: {
                 name: 'auto_learn_if_needed',
-                arguments: { path: './' }
+                arguments: { path: resolvedPath }
               }
             };
-            console.log('\n📞 Calling auto_learn_if_needed with path: "./"');
+            console.log(`\n📞 Calling auto_learn_if_needed with path: "${resolvedPath}"`);
             server.stdin.write(JSON.stringify(toolCall) + '\n');
           }, 500);
         } else if (msg.id === 2) {
